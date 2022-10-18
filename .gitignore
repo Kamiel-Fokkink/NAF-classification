@@ -1,3 +1,5 @@
 Inputs/
 **/*.ipynb_checkpoints/
 **/*.ipynb
+.DS_Store
+**/*.DS_Store
