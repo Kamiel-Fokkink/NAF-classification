@@ -14,8 +14,6 @@ def read_naf(train_path: str, sep='|', index_col=0) -> pd.DataFrame:
     """ Read naf_activite.csv"""
     df = pd.read_csv(train_path, sep=sep, index_col=index_col)
     df = df.astype({'ACTIVITE': 'str', 'SIREN': 'object'})
-    
-
     return df
 
 def map_naf5_to_naf2(df: pd.DataFrame, mapping_path: str) -> pd.DataFrame:
