@@ -12,7 +12,7 @@ from data_loader import ClassificationDataset
 
 def read_naf(train_path: str, sep='|', index_col=0) -> pd.DataFrame:
     """ Read naf_activite.csv"""
-    df = pd.read_csv(train_path, sep, index_col=index_col)
+    df = pd.read_csv(train_path, sep=sep, index_col=index_col)
     df = df.astype({'ACTIVITE': 'str', 'SIREN': 'object'})
 
     return df
@@ -25,7 +25,7 @@ def map_naf5_to_naf2(df: pd.DataFrame, mapping_path: str) -> pd.DataFrame:
     
     return df
 
-def apply_one_hot_encoder(df: pd.DataFrame, old_col: str, targ_col: str, classes: list) -> pd.DataFrame:
+def apply_one_hot_encoder(df: pd.DataFrame, classes: list) -> pd.DataFrame:
     """Apply one hot encoder to naf2 code and append the result as a column of lists"""
     encoder = get_one_hot_encoder(data=list(classes))
 
