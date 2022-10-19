@@ -2,13 +2,21 @@
 Todo: put parameters into config
 
 """
-
+import nltk
+import unidecode
 import pandas as pd
 
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
 
 from data_loader import ClassificationDataset
+
+# =====================Variables for cleaning text=================
+characters_to_remove = ["@", "/", "#", ".", ",", "!", "?", "(", ")", "-", "_","’","'", "\"", ":"]
+transformation_dict = {initial:" " for initial in characters_to_remove}
+stop_words = nltk.corpus.stopwords.words("french")
+stop_words = [unidecode.unidecode(stopword) for stopword in stop_words]
+# =================================================================
 
 def read_naf(train_path: str, sep='|', index_col=0) -> pd.DataFrame:
     """ Read naf_activite.csv"""
@@ -35,10 +43,20 @@ def apply_one_hot_encoder(df: pd.DataFrame, classes: list) -> pd.DataFrame:
 
     return df
 
-def train_val_split(df: pd.DataFrame):
-    """Train validation split on dataset"""
 
-    texts = df["ACTIVITE"].tolist()
+def apply_clean_paragraph(df: pd.DataFrame, rm_ponctuation=True, rm_accent=True, rm_stopword=True)  -> pd.DataFrame:
+    """Apply clean paragraph to column activite"""
+    
+    df['ACTIVITE_clean'] = df['ACTIVITE'].apply(lambda x: clean_paragraph(x, rm_ponctuation=rm_ponctuation, rm_accent=rm_accent, rm_stopword=rm_stopword))
+
+    return df
+
+def train_val_split(df: pd.DataFrame, clean=True):
+    """Train validation split on dataset"""
+    if clean:
+        texts = df["ACTIVITE_clean"].to_list()
+    else:
+        texts = df["ACTIVITE"].tolist()
     labels = df["encoded_label"].tolist()
 
     train_texts, val_texts, train_labels, val_labels = train_test_split(
@@ -106,5 +124,27 @@ def get_naf5_to_naf2(mapping_path: str, sep=';',  encoding='latin-1') -> dict:
         
     return classes
 
+def clean_paragraph(comment, rm_ponctuation, rm_accent, rm_stopword):
+    '''Cleans a paragraphs'''
+
+    comment = comment.lower()
+    if rm_ponctuation:
+        comment = aux_remove_ponctuation(comment)
+    if rm_accent:
+        comment = aux_remove_accent(comment)
+    if rm_stopword:
+        comment = aux_remove_stopword(comment)
+
+    return comment
 
 
+def aux_remove_ponctuation(comment):
+   
+    return comment.translate(str.maketrans(transformation_dict))
+
+def aux_remove_accent(comment):
+    return unidecode.unidecode(comment)
+
+def aux_remove_stopword(comment):
+    comment = [token for token in nltk.word_tokenize(comment) if token not in stop_words] 
+    return " ".join(comment)
