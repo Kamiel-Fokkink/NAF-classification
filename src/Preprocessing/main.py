@@ -12,13 +12,13 @@ if __name__ == "__main__":
 
     df_train = read_naf(train_path)
     df_train = map_naf5_to_naf2(df_train, mapping_path)
-
+    df_train = apply_clean_paragraph(df_train, rm_ponctuation=True, rm_accent=True, rm_stopword=True)
     df_train = apply_one_hot_encoder(df_train, list(classes.keys()))
 
     if not os.path.exists('./intermediate_outputs'):
         os.mkdir('./intermediate_outputs') 
         
-    df_train.to_csv('./intermediate_outputs/train_onehot.csv', index=False)
+    df_train.to_csv('./intermediate_outputs/train_clean.csv', index=False)
 
 
     # example for using tokenizer and pretrained model
@@ -33,6 +33,6 @@ if __name__ == "__main__":
     # tokenizer = AutoTokenizer.from_pretrained(model)
     # clf_model = AutoModelForSequenceClassification.from_pretrained(model, num_labels=nb_labels)
 
-    # train_texts, val_texts, train_labels, val_labels = train_val_split(df_train)
+    # train_texts, val_texts, train_labels, val_labels = train_val_split(df_train, clean=True)
     # train_encodings, val_encodings =  tokenize_text(train_texts, val_texts, tokenizer)
     # train_dataset, val_dataset = load_dataset(train_encodings, val_encodings, train_labels, val_labels)
