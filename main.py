@@ -23,8 +23,8 @@ if __name__ == "__main__":
         os.mkdir('./intermediate_outputs') 
         
     df_train.to_csv('./intermediate_outputs/train_onehot.csv', index=False)
-    
     model = modeling.auto_nlp_modeling(data=df_train, nb_labels = len(list(classes.keys())))
     trained_model = model.fit()
-    
-    # fill out prediction part / you can use a pipeline for submission
+    output = model.predict(trained_model, df_test)
+    df_test['predicted'] = output.predictions.tolist()
+    df_test.to_csv('./Outputs/predictions.csv', index=False)

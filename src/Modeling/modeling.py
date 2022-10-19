@@ -4,13 +4,13 @@ from transformers import Trainer, TrainingArguments
 from sklearn.model_selection import train_test_split
 import torch
 
-class auto_nlp_modeling(self):
+class auto_nlp_modeling():
     
     def __init__(self, data, nb_labels = 88, tuning = False):
         self.model = "camembert-base"
         self.nb_labels = nb_labels
         self.data = data
-        self.tuning = tuning 
+        self.tuning = tuning
 
     def train_model(self, train, test, epochs = 5, batch_size = 16, weight_decay = 0.01):
         """ train model with fixed hyperparameters """
@@ -36,10 +36,10 @@ class auto_nlp_modeling(self):
 
         # trainng setting
         trainer = Trainer(
-        model=clf_model,                  # the instantiated 🤗 Transformers model to be trained
+        model=clf_model,                  # the instantiated :hugging_face: Transformers model to be trained
         args=training_args,               # training arguments, defined above
-        train_dataset=train_dataset,      # training dataset
-        eval_dataset=val_dataset,         # evaluation dataset
+        train_dataset=train,      # training dataset
+        eval_dataset=test,         # evaluation dataset
         #compute_metrics=compute_metrics,  # function to compute the metrics during the training
         )
 
@@ -56,7 +56,7 @@ class auto_nlp_modeling(self):
         labels = self.data["encoded_label"].tolist()
 
         train_texts, val_texts, train_labels, val_labels = train_test_split(
-            texts, labels, test_size=.4, random_state=17, stratify=labels
+            texts, labels, test_size=.4, random_state=17
         )
     
         return train_texts, val_texts, train_labels, val_labels
@@ -70,7 +70,7 @@ class auto_nlp_modeling(self):
         texts = self.data["ACTIVITE"].tolist()
         labels = self.data["encoded_label"].tolist()
         train_texts, val_texts, train_labels, val_labels = train_test_split(
-        texts, labels, test_size=.1, random_state=17, stratify=labels)
+        texts, labels, test_size=.1, random_state=17)
 
         # Prepare train and val sets for the training
         train_encodings = tokenizer(train_texts, truncation=True, max_length=300,
@@ -83,32 +83,31 @@ class auto_nlp_modeling(self):
         val_dataset = ClassificationDataset(val_encodings, val_labels)
 
         # hyperparameter tuning and training
-        if self.tuning = True:
-            epochs, batch_size, warmup_steps, weight_decay = self.hyperparameter_tuning(train=train_dataset, test=val_dataset, epochs, batch_size, weight_decay)
-            model = self.train_model(train=train_dataset, test=val_dataset, epochs, batch_size, weight_decay)
+        if self.tuning == True:
+            epochs, batch_size, warmup_steps, weight_decay = self.hyperparameter_tuning(epochs, batch_size, weight_decay, train=train_dataset, test=val_dataset)
+            model = self.train_model(train=train_dataset, test=val_dataset)
         else: 
-            model = self.train_model(train=train_dataset, test=val_dataset, epochs, batch_size, weight_decay)
+            model = self.train_model(train=train_dataset, test=val_dataset)
 
         return model
 
 
-""" TO DO """
-
     def hyperparameter_tuning(self, train, test, epochs, batch_size, weight_decay):
-        """ call the train_model for each combination of parameters and return the best params """
-
         return epochs, batch_size, warmup_steps, weight_decay
 
-    def predict(self, test):
-        """ prediction of data"""
-        pred = model.predict(test_dataset=test, metric_key_prefix="val")
-
+    def predict(self, trained_model, df_test):
+        tokenizer = AutoTokenizer.from_pretrained(self.model)
+        # Split data into training and validation sets
+        test_texts = df_test["text"].tolist()
+        test_encodings = tokenizer(test_texts, truncation=True, max_length=300,
+                                padding=True)
+        # tensor transformation
+        test_dataset = ClassificationTestDataset(test_encodings, len(test_texts))
+        outputs = trained_model.predict(test_dataset, metric_key_prefix = "test")
+        return outputs
 
     def evaluation(self, model):
-        """ model evaluation, should be used in hyperparameter tuning"""
-
-
-
+        return
 
 
 class ClassificationDataset(torch.utils.data.Dataset):
@@ -123,3 +122,16 @@ class ClassificationDataset(torch.utils.data.Dataset):
 
     def __len__(self):
         return len(self.labels)
+
+
+class ClassificationTestDataset(torch.utils.data.Dataset):
+    def __init__(self, encodings, length):
+        self.encodings = encodings
+        self.length = length
+
+    def __getitem__(self, idx):
+        item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
+        return item
+
+    def __len__(self):
+        return self.length
