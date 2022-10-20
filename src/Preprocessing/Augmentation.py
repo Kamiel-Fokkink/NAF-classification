@@ -2,6 +2,7 @@
 from doctest import OutputChecker
 from googletrans import Translator
 import pandas as pd
+import random
 
 translator = Translator()
 
@@ -34,8 +35,33 @@ def back_trans_train(df: pd.DataFrame, threshold=250):
     labels1 = list(count_by_class[count_by_class<120].index)
     df1 = df.copy()
     df1 = df1[df1["NAF2_CODE"].isin(labels)]
-    # Back translation through 10 languages if count by class less than 150, otherwise we take 6 to cut running time
-    df1['ACTIVITE'] = df1.apply(lambda x: back_translate(x.ACTIVITE) if x.NAF2_CODE in labels1 else back_translate(x.ACTIVITE,num_lang=6) ,axis=1)
+    # Back translation through 10 languages if count by class less than 150, otherwise we take 5 to cut running time
+    df1['ACTIVITE'] = df1.apply(lambda x: back_translate(x.ACTIVITE) if x.NAF2_CODE in labels1 else back_translate(x.ACTIVITE,num_lang=5) ,axis=1)
     df1 = df1.explode('ACTIVITE').reset_index(drop=True)
+
+    return  pd.concat([df1,df],axis=0).drop_duplicates()
+
+def random_deletion(text_line):
+    text_array = text_line.split()
+    if len(text_array)>10:
+        delete_token_index = random.randint(0, len(text_array)-1)
+        text_array[delete_token_index] = ''
+        output_text = " ".join(text_array)
+        return output_text
+
+def random_deletion_train(df: pd.DataFrame, threshold=400):
+    """
+    Augment train set by randomly delete one word
+    :param df: DataFrame, trainset
+    :param threshold: classes with number of samples less than threshold will be augmented
+    :return: df, result
+    """
+    count_by_class = df.groupby(['NAF2_CODE']).count()['ACTIVITE']
+    labels = list(count_by_class[count_by_class<threshold].index)
+    df1 = df.copy()
+    df1 = df1[df1["NAF2_CODE"].isin(labels)]
+    # Back translation through 10 languages if count by class less than 150, otherwise we take 6 to cut running time
+    df1['ACTIVITE'] = df1.apply(lambda x: random_deletion(x.ACTIVITE) ,axis=1)
+    df1 = df1.reset_index(drop=True)
 
     return  pd.concat([df1,df],axis=0).drop_duplicates()
