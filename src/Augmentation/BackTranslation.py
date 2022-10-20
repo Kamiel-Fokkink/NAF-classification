@@ -30,7 +30,9 @@ def back_trans_train(df: pd.DataFrame, labels:list, num_lang=10):
     :param num_lang: interger, number of intermediate languages, no larger than 10
     :return: df, result
     """
-    df1=df.copy()
-    df1['ACTIVITE']=df1.apply(lambda x: back_translate(x.ACTIVITE,num_lang) if (x.NAF2_CODE in labels) else x.ACTIVITE,axis=1)
-    
-    return df1.explode('ACTIVITE')
+    df1 = df.copy()
+    df1 = df1[df1["NAF2_CODE"].isin(labels)]
+    df1['ACTIVITE'] = df1.apply(lambda x: back_translate(x.ACTIVITE, num_lang),axis=1)
+    df1 = df1.explode('ACTIVITE').reset_index(drop=True)
+
+    return  pd.concat([df1,df],axis=0).drop_duplicates()
