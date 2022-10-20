@@ -71,3 +71,35 @@ def random_deletion_train(df: pd.DataFrame, threshold=400):
     df1 = df1.reset_index(drop=True)
 
     return  pd.concat([df1,df],axis=0).drop_duplicates()
+
+def random_swap(text_line):
+    """
+    Radonmly swap 2 words from a text with more than 10 words
+    :param text_line: str
+    :return: output_text: str
+    """
+    text_array = text_line.split()
+    if len(text_array)>10:
+        swap_token_index = random.sample(range(0, len(text_array)-1),2)
+        temp = text_array[swap_token_index[0]]
+        text_array[swap_token_index[0]] = text_array[swap_token_index[1]]
+        text_array[swap_token_index[1]] = temp
+        output_text = " ".join(text_array)
+        return output_text
+
+def random_swap_train(df: pd.DataFrame, threshold=400):
+    """
+    Augment train set by randomly swap 2 words
+    :param df: DataFrame, trainset
+    :param threshold: classes with number of samples less than threshold will be augmented
+    :return: df, result
+    """
+    count_by_class = df.groupby(['NAF2_CODE']).count()['ACTIVITE']
+    labels = list(count_by_class[count_by_class<threshold].index)
+    df1 = df.copy()
+    df1 = df1[df1["NAF2_CODE"].isin(labels)]
+    # Back translation through 10 languages if count by class less than 150, otherwise we take 6 to cut running time
+    df1['ACTIVITE'] = df1.apply(lambda x: random_swap(x.ACTIVITE) ,axis=1)
+    df1 = df1.reset_index(drop=True)
+
+    return  pd.concat([df1,df],axis=0).drop_duplicates()
