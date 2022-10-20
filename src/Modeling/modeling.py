@@ -1,18 +1,20 @@
 from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
-from transformers import Trainer, TrainingArguments
+from transformers import TrainingArguments, Trainer
 from sklearn.model_selection import train_test_split
 import torch
+import pandas as pd
+import numpy as np
+import tensorflow as tf
 
 class auto_nlp_modeling():
-    
-    def __init__(self, data, nb_labels = 88, tuning = False):
-        self.model = "camembert-base"
+
+    def __init__(self, model, data, nb_labels = 88):
+        self.model = model
         self.nb_labels = nb_labels
         self.data = data
-        self.tuning = tuning
 
-    def train_model(self, train, test, epochs = 5, batch_size = 16, weight_decay = 0.01):
+    def train_model(self, train, test, learning_rate = 3e-5, batch_size = 4, weight_decay = 0.01):
         """ train model with fixed hyperparameters """
 
         clf_model = AutoModelForSequenceClassification.from_pretrained(self.model, num_labels=self.nb_labels)
@@ -20,10 +22,11 @@ class auto_nlp_modeling():
         # Config the Trainer
         training_args = TrainingArguments(
         output_dir="./output_model",     # output directory
-        num_train_epochs=epochs,              # total number of training epochs
+        learning_rate = learning_rate,
+        num_train_epochs=5,              # total number of training epochs
         per_device_train_batch_size=batch_size,  # batch size per device during training
-        per_device_eval_batch_size=64,   # batch size for evaluation
-        warmup_steps=500,                # number of warmup steps for learning rate scheduler
+        per_device_eval_batch_size=4,   # batch size for evaluation
+        warmup_steps=100,                # number of warmup steps for learning rate scheduler
         weight_decay=weight_decay,               # strength of weight decay
         logging_dir='./logs',            # directory for storing logs
         logging_steps=20,                # number of steps before to store training metrics
@@ -36,7 +39,7 @@ class auto_nlp_modeling():
 
         # trainng setting
         trainer = Trainer(
-        model=clf_model,                  # the instantiated :hugging_face: Transformers model to be trained
+        model=clf_model,                  # the instantiated 🤗 Transformers model to be trained
         args=training_args,               # training arguments, defined above
         train_dataset=train,      # training dataset
         eval_dataset=test,         # evaluation dataset
@@ -82,32 +85,28 @@ class auto_nlp_modeling():
         train_dataset = ClassificationDataset(train_encodings, train_labels)
         val_dataset = ClassificationDataset(val_encodings, val_labels)
 
-        # hyperparameter tuning and training
-        if self.tuning == True:
-            epochs, batch_size, warmup_steps, weight_decay = self.hyperparameter_tuning(epochs, batch_size, weight_decay, train=train_dataset, test=val_dataset)
-            model = self.train_model(train=train_dataset, test=val_dataset)
-        else: 
-            model = self.train_model(train=train_dataset, test=val_dataset)
-
+        model = self.train_model(train=train_dataset, test=val_dataset)
         return model
 
-
-    def hyperparameter_tuning(self, train, test, epochs, batch_size, weight_decay):
-        return epochs, batch_size, warmup_steps, weight_decay
 
     def predict(self, trained_model, df_test):
         tokenizer = AutoTokenizer.from_pretrained(self.model)
         # Split data into training and validation sets
         test_texts = df_test["text"].tolist()
-        test_encodings = tokenizer(test_texts, truncation=True, max_length=300,
-                                padding=True)
+        length = len(test_texts)
+        test_encodings = tokenizer(test_texts, truncation=True, max_length=300, padding=True, return_tensors = "pt")
         # tensor transformation
-        test_dataset = ClassificationTestDataset(test_encodings, len(test_texts))
+        test_dataset = ClassificationTestDataset(test_encodings, length)
         outputs = trained_model.predict(test_dataset, metric_key_prefix = "test")
-        return outputs
+        test_df = pd.DataFrame(columns=["text", "NewsId", "Predicted"])
+        test_df['text'] = test_texts
+        output = tf.math.top_k(torch.tensor(outputs.predictions), k=10)
+        idx = np.array(output.indices)
+        print(idx)
+        test_df['Predicted'] = idx.tolist()
+        test_df.drop(columns=["NewsId"])
+        return test_df
 
-    def evaluation(self, model):
-        return
 
 
 class ClassificationDataset(torch.utils.data.Dataset):
