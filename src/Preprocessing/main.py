@@ -17,6 +17,7 @@ if __name__ == "__main__":
     df_train.reset_index(inplace=True,drop=True)
     df_train.dropna(how='any',axis=0,inplace=True)
     df_train = back_trans_train(df_train)
+    df_train = random_deletion_train(df_train)
     df_train = apply_clean_paragraph(df_train, rm_ponctuation=True, rm_accent=True, rm_stopword=True)
     df_train = apply_one_hot_encoder(df_train, list(classes.keys()))
 
