@@ -22,14 +22,16 @@ def back_translate(text: str, num_lang=10):
 
     return  list({}.fromkeys(backtrans).keys()) #Only keep the unique results of backtranslations 
 
-def back_trans_train(df: pd.DataFrame, labels:list, num_lang=10):
+def back_trans_train(df: pd.DataFrame, num_lang=10, threshold=150):
     """
     Augment train set by back translation
     :param df: DataFrame, trainset
-    :param label: list of labels need to be augmented
+    :param threshold: classes with number of samples less than threshold will be augmented
     :param num_lang: interger, number of intermediate languages, no larger than 10
     :return: df, result
     """
+    count_by_class = df.groupby(['NAF2_CODE']).count()['ACTIVITE']
+    labels = list(count_by_class[count_by_class<threshold].index))
     df1 = df.copy()
     df1 = df1[df1["NAF2_CODE"].isin(labels)]
     df1['ACTIVITE'] = df1.apply(lambda x: back_translate(x.ACTIVITE, num_lang),axis=1)
