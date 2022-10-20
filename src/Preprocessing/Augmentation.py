@@ -22,19 +22,20 @@ def back_translate(text: str, num_lang=10):
 
     return  list({}.fromkeys(backtrans).keys()) #Only keep the unique results of backtranslations 
 
-def back_trans_train(df: pd.DataFrame, num_lang=10, threshold=150):
+def back_trans_train(df: pd.DataFrame, threshold=250):
     """
     Augment train set by back translation
     :param df: DataFrame, trainset
     :param threshold: classes with number of samples less than threshold will be augmented
-    :param num_lang: interger, number of intermediate languages, no larger than 10
     :return: df, result
     """
     count_by_class = df.groupby(['NAF2_CODE']).count()['ACTIVITE']
-    labels = list(count_by_class[count_by_class<threshold].index))
+    labels = list(count_by_class[count_by_class<threshold].index)
+    labels1 = list(count_by_class[count_by_class<120].index)
     df1 = df.copy()
     df1 = df1[df1["NAF2_CODE"].isin(labels)]
-    df1['ACTIVITE'] = df1.apply(lambda x: back_translate(x.ACTIVITE, num_lang),axis=1)
+    # Back translation through 10 languages if count by class less than 150, otherwise we take 6 to cut running time
+    df1['ACTIVITE'] = df1.apply(lambda x: back_translate(x.ACTIVITE) if x.NAF2_CODE in labels1 else back_translate(x.ACTIVITE,num_lang=6) ,axis=1)
     df1 = df1.explode('ACTIVITE').reset_index(drop=True)
 
     return  pd.concat([df1,df],axis=0).drop_duplicates()
