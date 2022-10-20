@@ -29,16 +29,16 @@ def main():
         if naf + '.' == line[:3]:
             if current_line:
                 df = df.append({'naf': naf, 'text': current_line}, ignore_index=True)
-            current_line = line.lstrip('0123456789.- ')
+            current_line = line.lstrip('0123456789.-,p ').replace('CC :', '').replace('CA :', '').replace('Z ', '')
             within_line = True
         elif new_naf + ' ' == line[:3]:
             if current_line:
                 df = df.append({'naf': naf, 'text':current_line}, ignore_index=True)
             i = new_i
-            current_line = line.lstrip('0123456789.- ')
+            current_line = line.lstrip('0123456789.-,p ').replace('CC :', '').replace('CA :', '').replace('Z ', '')
             within_line = True
         elif naf + ' ' == line[:3] or within_line:
-            current_line += ' ' + line.lstrip('0123456789.- ')
+            current_line += ' ' + line.lstrip('0123456789.-,p ').replace('CC :', '').replace('CA :', '').replace('Z ', '')
         else:
             continue
     
