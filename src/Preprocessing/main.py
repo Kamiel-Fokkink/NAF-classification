@@ -15,6 +15,8 @@ if __name__ == "__main__":
     df_train = map_naf5_to_naf2(df_train, mapping_path)
     df_train = undersample(df, threshold=1000)
     df_train = back_trans_train(df_train)
+    df_train = back_trans_train(df_train)
+    df_train = back_trans_train(df_train, threshold=200, num_lang=6)
     df_train = apply_clean_paragraph(df_train, rm_ponctuation=True, rm_accent=True, rm_stopword=True)
     df_train = apply_one_hot_encoder(df_train, list(classes.keys()))
 
