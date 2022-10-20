@@ -42,8 +42,14 @@ def back_trans_train(df: pd.DataFrame, threshold=250):
     return  pd.concat([df1,df],axis=0).drop_duplicates()
 
 def random_deletion(text_line):
+    """
+    Radonmly delete one word from a text with more than 8 words
+    :param df: DataFrame, trainset
+    :param threshold: classes with number of samples less than threshold will be augmented
+    :return: df, result
+    """
     text_array = text_line.split()
-    if len(text_array)>10:
+    if len(text_array)>8:
         delete_token_index = random.randint(0, len(text_array)-1)
         text_array[delete_token_index] = ''
         output_text = " ".join(text_array)
