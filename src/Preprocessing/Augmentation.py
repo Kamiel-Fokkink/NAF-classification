@@ -2,6 +2,7 @@
 from doctest import OutputChecker
 from googletrans import Translator
 import pandas as pd
+import re
 import random
 
 translator = Translator()
@@ -41,12 +42,11 @@ def back_trans_train(df: pd.DataFrame, threshold=250):
 
     return  pd.concat([df1,df],axis=0).drop_duplicates()
 
-def random_deletion(text_line):
+def random_deletion(text_line: str):
     """
     Radonmly delete one word from a text with more than 8 words
-    :param df: DataFrame, trainset
-    :param threshold: classes with number of samples less than threshold will be augmented
-    :return: df, result
+    :param text_line: str
+    :return: output_text: str
     """
     text_array = text_line.split()
     if len(text_array)>8:
