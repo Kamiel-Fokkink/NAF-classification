@@ -1,4 +1,5 @@
 Inputs/
+Outputs/Preprocessed/
 **/*.ipynb_checkpoints/
 **/*.ipynb
 .DS_Store

@@ -6,6 +6,7 @@ import nltk
 import unidecode
 import pandas as pd
 import numpy as np
+import os
 
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
@@ -90,14 +91,6 @@ def tokenize_text(train_texts, val_texts, tokenizer):
 
     return train_encodings, val_encodings
 
-def load_dataset(train_encodings, val_encodings, train_labels, val_labels) -> ClassificationDataset:
-    """Gnerate torch datasets"""
-    train_dataset = ClassificationDataset(train_encodings, train_labels)
-    val_dataset = ClassificationDataset(val_encodings, val_labels)
-
-    return train_dataset, val_dataset
-    
-
 ############################## Preprocessing Utils Functions ###########
 
 def get_one_hot_encoder(data: list) -> OneHotEncoder:
@@ -173,4 +166,25 @@ def aux_get_keep_num(class_cnt, threshold):
 def aux_get_class_count(df, threshold) -> list:
     count_by_class = df.groupby(['NAF2_CODE']).count()['ACTIVITE']
     return {count_by_class.keys()[i]: aux_get_keep_num(count_by_class.values[i], threshold) for i in range(len(count_by_class)) }
-    
+
+
+
+def main_preprocessing(conf):
+
+    input_file = conf['paths']['Inputs_path'] + conf['files_info']['naf_descriptions']['path_file']
+    input_mapping = conf['paths']['Inputs_path'] + conf['files_info']['naf_descriptions']['y_name']
+    output_dir = conf['paths']['Outputs_path']
+    output_file = conf['paths']['Outputs_path'] + conf['files_info']['naf_descriptions']['path_file_preprocessed']
+
+    classes = get_naf2_to_label(input_mapping)
+
+    df_train = read_naf(input_file)
+    df_train = map_naf5_to_naf2(df_train, input_mapping)
+    df_train = undersample(df_train, threshold=1000)
+    df_train.reset_index(inplace=True,drop=True)
+    df_train.dropna(how='any',axis=0,inplace=True)
+
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+        
+    df_train.to_csv(output_file, index=False)

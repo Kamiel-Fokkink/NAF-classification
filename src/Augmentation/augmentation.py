@@ -17,6 +17,7 @@ def back_translate(text: str, num_lang=10):
     lang_inter = ['en','es','ja',"zh-cn","ca",'ar','fi','el','cs','th']
     lang_inter = lang_inter[:num_lang]
     backtrans = [text]
+    print("Whoop!")
     for lang in lang_inter:
         trans1 = translator.translate(text, src='fr', dest=lang)
         trans2 = translator.translate(trans1.text, src=lang, dest='fr')
@@ -103,3 +104,23 @@ def random_swap_train(df: pd.DataFrame, threshold=400):
     df1 = df1.reset_index(drop=True)
 
     return  pd.concat([df1,df],axis=0).drop_duplicates()
+
+
+def main_augmentation(conf):
+
+    df_given = pd.read_csv(conf['paths']['Outputs_path'] + conf['files_info']['naf_descriptions']['path_file_preprocessed'])
+    df_given = back_trans_train(df_given)
+    df_given = random_deletion_train(df_given)
+    df_given = random_swap_train(df_given)
+    df_given = apply_clean_paragraph(df_given, rm_ponctuation=True, rm_accent=True, rm_stopword=True)
+    df_given = apply_one_hot_encoder(df_given, list(classes.keys()))
+
+    df_external = pd.read_csv(conf['paths']['Outputs_path'] + conf['files_info']['external_dataset']['path_file_preprocessed'])
+    df_external = back_trans_train(df_external)
+    df_external = random_deletion_train(df_external)
+    df_external = random_swap_train(df_external)
+    df_external = apply_clean_paragraph(df_external, rm_ponctuation=True, rm_accent=True, rm_stopword=True)
+    df_external = apply_one_hot_encoder(df_external, list(classes.keys()))
+
+    df_augmented = pd.concat([df_given, df_external])
+    df_augmented.to_csv(conf['paths']['Outputs_path'] + conf['files_info']['train_data']['path_file'])

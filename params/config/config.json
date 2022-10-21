@@ -5,18 +5,29 @@
     "Outputs_path" : "../Outputs/",
     "dir_preprocessed" : "Preprocessed/",
     "dir_models" : "Models/",
-    "dir_metrics" : "Metrics/"
+    "dir_metrics" : "Metrics/",
+    "dir_augmented" : "Augmented/",
+    "logs_path" : "../params/logs/logs.log"
     },
 
 "path_log" : "../params/logs.log",
 
 "files_info" : {
     "naf_descriptions" : {
-        "path_file" : "naf-activite.csv",
-        "path_file_preprocessed" : "Preprocessed/naf-activite_preprocessed.csv",
+        "path_file" : "naf_activite.csv",
+        "path_file_preprocessed" : "Preprocessed/naf_activite.csv",
         "y_name" : "naf_mapping.csv"
-    }
+    },
 
+    "external_dataset" : {
+        "path_file" : "NAF_2020.txt",
+        "path_file_preprocessed" : "Preprocessed/naf_2020.csv"
+    },
+
+    "train_data" : {
+        "path_file" : "Augmented/train.csv"
+    }
+    
     }
 
 }

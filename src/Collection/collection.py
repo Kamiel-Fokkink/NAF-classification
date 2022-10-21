@@ -2,8 +2,9 @@ import pandas as pd
 import re
 
 
-def main():
-    naf_file = 'NAF_2020.txt'
+def main_external(conf):
+    
+    naf_file = conf['paths']['Inputs_path'] + conf['files_info']['external_dataset']['path_file']
     df = pd.DataFrame({'naf':[], 'text':[]})
     f = open(naf_file, 'r')
     Lines = f.readlines()
@@ -28,12 +29,14 @@ def main():
 
         if naf + '.' == line[:3]:
             if current_line:
-                df = df.append({'naf': naf, 'text': current_line}, ignore_index=True)
+                #df = df.append({'naf': naf, 'text': current_line}, ignore_index=True)
+                df.loc[len(df)] = {'naf': naf, 'text': current_line}
             current_line = line.lstrip('0123456789.-,p ').replace('CC :', '').replace('CA :', '').replace('Z ', '')
             within_line = True
         elif new_naf + ' ' == line[:3]:
             if current_line:
-                df = df.append({'naf': naf, 'text':current_line}, ignore_index=True)
+                #df = df.append({'naf': naf, 'text':current_line}, ignore_index=True)
+                df.loc[len(df)] = {'naf': naf, 'text': current_line}
             i = new_i
             current_line = line.lstrip('0123456789.-,p ').replace('CC :', '').replace('CA :', '').replace('Z ', '')
             within_line = True
@@ -42,7 +45,5 @@ def main():
         else:
             continue
     
-    df.to_csv('naf_2020.csv')
-
-if __name__ == '__main__' :
-    main()
+    outfile = conf['paths']['Outputs_path'] + conf['files_info']['external_dataset']['path_file_preprocessed']
+    df.to_csv(outfile)
