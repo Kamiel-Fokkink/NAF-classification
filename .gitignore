@@ -3,4 +3,5 @@ Inputs/
 **/*.ipynb
 .DS_Store
 **/*.DS_Store
+**/__pycache__
 src/Collection/naf_2020.csv

@@ -1,0 +1,22 @@
+{	
+
+"paths" : {
+    "Inputs_path" : "../Inputs/",
+    "Outputs_path" : "../Outputs/",
+    "dir_preprocessed" : "Preprocessed/",
+    "dir_models" : "Models/",
+    "dir_metrics" : "Metrics/"
+    },
+
+"path_log" : "../params/logs.log",
+
+"files_info" : {
+    "naf_descriptions" : {
+        "path_file" : "naf-activite.csv",
+        "path_file_preprocessed" : "Preprocessed/naf-activite_preprocessed.csv",
+        "y_name" : "naf_mapping.csv"
+    }
+
+    }
+
+}
