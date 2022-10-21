@@ -91,14 +91,6 @@ def tokenize_text(train_texts, val_texts, tokenizer):
 
     return train_encodings, val_encodings
 
-def load_dataset(train_encodings, val_encodings, train_labels, val_labels) -> ClassificationDataset:
-    """Gnerate torch datasets"""
-    train_dataset = ClassificationDataset(train_encodings, train_labels)
-    val_dataset = ClassificationDataset(val_encodings, val_labels)
-
-    return train_dataset, val_dataset
-    
-
 ############################## Preprocessing Utils Functions ###########
 
 def get_one_hot_encoder(data: list) -> OneHotEncoder:
