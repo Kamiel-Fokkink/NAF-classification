@@ -2,37 +2,31 @@ import os
 import pandas as pd
 from preprocessing import *
 
-train_path = "./data/naf_activite.csv"
-mapping_path = "./data/naf_mapping.csv"
+#train_path = "./data/naf_activite.csv"
+#mapping_path = "./data/naf_mapping.csv"
 
 
-if __name__ == "__main__":
-    
-    classes = get_naf2_to_label(mapping_path)
+def main_preprocessing(conf):
 
-    df_train = read_naf(train_path)
-    df_train = map_naf5_to_naf2(df_train, mapping_path)
+    input_file = conf['Inputs_path'] + conf['files_info']['naf_descriptions']['path_file']
+    input_mapping = conf['Inputs_path'] + conf['files_info']['naf_description']['y_name']
+    output_dir = conf['Outputs_path']
+    output_file = conf['Outputs_path'] + conf['files_info']['naf_description']['path_file_preprocessed']
+
+    classes = get_naf2_to_label(input_mapping)
+
+    df_train = read_naf(input_file)
+    df_train = map_naf5_to_naf2(df_train, input_mapping)
+    df_train = undersample(df_train, threshold=1000)
+    df_train.reset_index(inplace=True,drop=True)
+    df_train.dropna(how='any',axis=0,inplace=True)
+    df_train = back_trans_train(df_train)
+    df_train = random_deletion_train(df_train)
+    df_train = random_swap_train(df_train)
     df_train = apply_clean_paragraph(df_train, rm_ponctuation=True, rm_accent=True, rm_stopword=True)
     df_train = apply_one_hot_encoder(df_train, list(classes.keys()))
 
-    if not os.path.exists('./intermediate_outputs'):
-        os.mkdir('./intermediate_outputs') 
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
         
-    df_train.to_csv('./intermediate_outputs/train_clean.csv', index=False)
-
-
-    # example for using tokenizer and pretrained model
-
-    # from sklearn.model_selection import train_test_split
-    # from transformers import AutoTokenizer, AutoModelForSequenceClassification
-    # from transformers import Trainer, TrainingArguments
-
-    # model = "camembert-base"
-    # nb_labels = 89
-
-    # tokenizer = AutoTokenizer.from_pretrained(model)
-    # clf_model = AutoModelForSequenceClassification.from_pretrained(model, num_labels=nb_labels)
-
-    # train_texts, val_texts, train_labels, val_labels = train_val_split(df_train, clean=True)
-    # train_encodings, val_encodings =  tokenize_text(train_texts, val_texts, tokenizer)
-    # train_dataset, val_dataset = load_dataset(train_encodings, val_encodings, train_labels, val_labels)
+    df_train.to_csv(output_file, index=False)
