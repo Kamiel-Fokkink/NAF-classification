@@ -5,6 +5,7 @@ Todo: put parameters into config
 import nltk
 import unidecode
 import pandas as pd
+import numpy as np
 
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
@@ -17,6 +18,8 @@ transformation_dict = {initial:" " for initial in characters_to_remove}
 stop_words = nltk.corpus.stopwords.words("french")
 stop_words = [unidecode.unidecode(stopword) for stopword in stop_words]
 # =================================================================
+
+
 
 def read_naf(train_path: str, sep='|', index_col=0) -> pd.DataFrame:
     """ Read naf_activite.csv"""
@@ -31,6 +34,15 @@ def map_naf5_to_naf2(df: pd.DataFrame, mapping_path: str) -> pd.DataFrame:
     df['NAF2_CODE'] =  df['NAF_CODE'].map(naf5_to_naf2)
     df = df.fillna(-1).astype({'NAF2_CODE': 'int'})
     
+    return df
+
+def undersample(df, threshold=1200):
+    sample_amounts = aux_get_class_count(df, threshold=threshold)
+    df = df.groupby('NAF2_CODE').apply(lambda g: g.sample(
+        n=sample_amounts[g.name],
+        replace=len(g) < sample_amounts[g.name]
+    )).reset_index(drop=True)
+
     return df
 
 def apply_one_hot_encoder(df: pd.DataFrame, classes: list) -> pd.DataFrame:
@@ -50,6 +62,7 @@ def apply_clean_paragraph(df: pd.DataFrame, rm_ponctuation=True, rm_accent=True,
     df['ACTIVITE_clean'] = df['ACTIVITE'].apply(lambda x: clean_paragraph(x, rm_ponctuation=rm_ponctuation, rm_accent=rm_accent, rm_stopword=rm_stopword))
 
     return df
+
 
 def train_val_split(df: pd.DataFrame, clean=True):
     """Train validation split on dataset"""
@@ -148,3 +161,16 @@ def aux_remove_accent(comment):
 def aux_remove_stopword(comment):
     comment = [token for token in nltk.word_tokenize(comment) if token not in stop_words] 
     return " ".join(comment)
+
+
+def aux_get_keep_num(class_cnt, threshold):
+    base = threshold - 150 * np.log10(threshold)
+    if class_cnt > threshold:
+        return  int(base  + 150 * np.log10(class_cnt)) 
+    else:
+        return class_cnt
+
+def aux_get_class_count(df, threshold) -> list:
+    count_by_class = df.groupby(['NAF2_CODE']).count()['ACTIVITE']
+    return {count_by_class.keys()[i]: aux_get_keep_num(count_by_class.values[i], threshold) for i in range(len(count_by_class)) }
+    

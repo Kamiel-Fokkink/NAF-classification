@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from preprocessing import *
+from Augmentation import *
 
 #train_path = "./data/naf_activite.csv"
 #mapping_path = "./data/naf_mapping.csv"
