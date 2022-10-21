@@ -9,17 +9,18 @@ import sys
 sys.path.insert(0,"Preprocessing/")
 sys.path.insert(0,"Modeling/")
 sys.path.insert(0,"Collection/")
-sys.path.insert(0,"Augmentation")
+sys.path.insert(0,"Augmentation/")
 
 
-import Preprocessing
-import Modeling
-import Collection
-import Augmentation
+import preprocessing
+#import modeling
+import collection
+import augmentation
 
 import argparse
 import json
 from time import time
+import logging
 
 
 ## Use parser to get arguments from the command line in order to launch only selected steps
@@ -43,6 +44,9 @@ path_conf = args.pathconf
 
 conf = json.load(open(path_conf, 'r'))
 
+logger = logging.getLogger('main_logger')
+handler = logging.FileHandler(conf['paths']['logs_path'])
+logger.addHandler(handler)
 
 
 def main(step_list, NB_STEP_TOT, path_conf = '../config/config.json'):
@@ -71,40 +75,48 @@ def main(step_list, NB_STEP_TOT, path_conf = '../config/config.json'):
 
     #Launch of each selected step
     if (step == 1) or (1 in step_list):
-        #logger.debug("Beginning of step 1 - Loading and Preprocessing given dataset")
+        logger.debug("Beginning of step 1 - Loading and Preprocessing given dataset")
 
+        print("Will start step 1")
         # Preprocessing of the given datasets
-        Preprocessing.main_preprocessing(conf)
+        preprocessing.main_preprocessing(conf)
 
-        #logger.debug("End of step 1 ")
-
-        print("Great job there we go!")
+        logger.debug("End of step 1 ")
 
     if (step == 2) or (2 in step_list):
-        #logger.debug("Beginning of step 2 - Collecting and Preprocessing external dataset")
+        logger.debug("Beginning of step 2 - Collecting and Preprocessing external dataset")
 
-        # Collecting external datasets
+        print("Will start step 2")
+        # Preprocessing external dataset
+        collection.main_external(conf)
 
-        # Preprocessing external datasets
-
-        # Writing of external datasets
-
-        #logger.debug("End of step 2")
+        logger.debug("End of step 2")
 
     if (step == 3) or (3 in step_list):
-        #logger.debug("Beginning of step 3 - Training model")
+        logger.debug("Beginning of step 3 - Augmenting Datasets")
 
-        #logger.debug("End of step 3")
+        print("Will start step 3")
+        # Perform augmentation on both given and external datasets
+        augmentation.main_augmentation(conf)
+
+        logger.debug("End of step 3")
 
     if (step == 4) or (4 in step_list):
-        #logger.debug("Beginning of step 4 - Making predictions with model")
+        logger.debug("Beginning of step 4 - Training model")
+        print("Doing 4")
 
-        #logger.debug("End of step 4")
+        logger.debug("End of step 4")
+
+    if (step == 5) or (5 in step_list):
+        logger.debug("Beginning of step 5 - Making predictions with model")
+        print("Doing 5")
+
+        logger.debug("End of step 5")
  
 if __name__ == '__main__':
     try:
-        main(step_list, NB_STEP_TOT = 420, path_conf=path_conf)
+        main(step_list, NB_STEP_TOT = 5, path_conf=path_conf)
     
     except Exception as e:
-        #logger.error("Error during execution", exc_info=True)
+        logger.error("Error during execution", exc_info=True)
         print(e)
