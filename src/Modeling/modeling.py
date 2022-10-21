@@ -1,7 +1,7 @@
 from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from transformers import TrainingArguments, Trainer
-from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 import torch
 import pandas as pd
 import numpy as np
@@ -9,12 +9,13 @@ import tensorflow as tf
 
 class auto_nlp_modeling():
 
-    def __init__(self, model, data, nb_labels = 88):
+    def __init__(self, model, data, labels, nb_labels = 88):
         self.model = model
         self.nb_labels = nb_labels
         self.data = data
+        self.labels = labels
 
-    def train_model(self, train, test, learning_rate = 3e-5, batch_size = 4, weight_decay = 0.01):
+    def train_model(self, train, test, learning_rate = 3e-5, batch_size = 16, weight_decay = 0.01):
         """ train model with fixed hyperparameters """
 
         clf_model = AutoModelForSequenceClassification.from_pretrained(self.model, num_labels=self.nb_labels)
@@ -25,8 +26,8 @@ class auto_nlp_modeling():
         learning_rate = learning_rate,
         num_train_epochs=5,              # total number of training epochs
         per_device_train_batch_size=batch_size,  # batch size per device during training
-        per_device_eval_batch_size=4,   # batch size for evaluation
-        warmup_steps=100,                # number of warmup steps for learning rate scheduler
+        per_device_eval_batch_size=64,   # batch size for evaluation
+        warmup_steps=500,                # number of warmup steps for learning rate scheduler
         weight_decay=weight_decay,               # strength of weight decay
         logging_dir='./logs',            # directory for storing logs
         logging_steps=20,                # number of steps before to store training metrics
@@ -68,10 +69,11 @@ class auto_nlp_modeling():
     def fit(self):
         # tokenize
         tokenizer = AutoTokenizer.from_pretrained(self.model)
-
         # Split data into training and validation sets
-        texts = self.data["ACTIVITE"].tolist()
-        labels = self.data["encoded_label"].tolist()
+        texts = self.data["ACTIVITE_clean"].tolist()
+        self.data["encoded_label"] = self.data["encoded_label"].replace({'"': })
+        labels = self.data["encoded_label"]
+        
         train_texts, val_texts, train_labels, val_labels = train_test_split(
         texts, labels, test_size=.1, random_state=17)
 
@@ -104,9 +106,36 @@ class auto_nlp_modeling():
         idx = np.array(output.indices)
         print(idx)
         test_df['Predicted'] = idx.tolist()
-        test_df.drop(columns=["NewsId"])
         return test_df
 
+    def evaluation(self, trainer, train_dataset, val_dataset):
+        train_pred = trainer.predict(train_dataset, metric_key_prefix="train")
+        val_pred = trainer.predict(val_dataset, metric_key_prefix="val")
+        history = trainer.state.log_history
+        self.plot_history_loss(
+            history=history,
+            output_file=None,
+        )
+        return
+
+    def plot_history_loss(self, history, output_file):
+        epochs = [_.get("epoch", 0) for _ in history]
+        train_loss = [_.get("loss", 0) for _ in history]
+        eval_loss = [_.get("eval_loss", 0) for _ in history]
+        idx = np.where(np.array(train_loss) > 0)
+        eval_idx = np.where(np.array(eval_loss) > 0)
+        fig = plt.figure()
+        plt.plot(np.array(epochs)[idx], np.array(train_loss)[idx], label="train")
+        plt.plot(np.array(epochs)[eval_idx], np.array(eval_loss)[eval_idx], label="val")
+        plt.xlabel("Nb Epochs")
+        plt.ylabel("Loss")
+        plt.title(f"Evolution of Loss")
+        plt.legend()
+        if output_file is not None:
+            fig.savefig(output_file)
+        plt.close(fig)
+
+        return
 
 
 class ClassificationDataset(torch.utils.data.Dataset):

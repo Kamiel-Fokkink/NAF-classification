@@ -3,3 +3,4 @@ Inputs/
 **/*.ipynb
 .DS_Store
 **/*.DS_Store
+src/Collection/naf_2020.csv
