@@ -1,4 +1,5 @@
-Inputs/
+Inputs/naf_activite.csv
+Inputs/naf_mapping.csv
 Outputs/Preprocessed/
 **/*.ipynb_checkpoints/
 **/*.ipynb
