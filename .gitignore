@@ -1,9 +1,0 @@
-Inputs/naf_activite.csv
-Inputs/naf_mapping.csv
-Outputs/Preprocessed/
-**/*.ipynb_checkpoints/
-**/*.ipynb
-.DS_Store
-**/*.DS_Store
-**/__pycache__
-src/Collection/naf_2020.csv
